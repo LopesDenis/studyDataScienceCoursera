@@ -1,0 +1,1651 @@
+---
+title: "04 - Exploratory Data Analisis - CodeBook"
+output: 
+      html_notebook:
+            toc: TRUE
+---
+
+#week 1 
+
+### lesson 1 Graphs
+
+```{r}
+pollution <- read.csv("data/avgpm25.csv"
+                      , colClasses = 
+                            c("numeric", "character", "factor", "numeric"
+                              , "numeric"))
+head(pollution)
+```
+
+```{r}
+summary(pollution)
+summary(pollution$pm25)
+
+```
+
+```{r}
+boxplot(pollution$pm25, col = "blue")
+```
+
+```{r}
+# importante to put rug in same line of hist
+hist(pollution$pm25, col = "green" , breaks = 100, labels = FALSE) ; rug(pollution$pm25)
+
+```
+
+**Overlaying Features**
+
+```{r}
+boxplot(pollution$pm25, col = "blue") ;
+abline(h = 12)
+```
+```{r}
+hist(pollution$pm25, col = "green") ;
+abline(v = 12, lwd = 2, col = "red") ;
+abline(v = median(pollution$pm25), col = "magenta", lwd = 4)
+```
+
+```{r}
+barplot(table(pollution$region), col = "wheat", main = "Number of Counties in Each Region")
+```
+
+```{r}
+boxplot(pm25 ~ region, data = pollution, col = "red")
+```
+
+```{r}
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+hist(subset(pollution, region == "east")$pm25, col = "green")
+hist(subset(pollution, region == "west")$pm25, col = "green")
+```
+
+```{r}
+with(pollution, plot(latitude, pm25,col = region)); 
+abline(h = 12, lwd = 2, lty = 3)
+```
+
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(pollution, region == "west"), plot(latitude, pm25, main = "West")) ;
+with(subset(pollution, region == "east"), plot(latitude, pm25, main = "East"))
+```
+
+### Lesson 2 - Plotting
+
+```{r}
+library(datasets)
+data(cars)
+with(cars, plot(speed, dist))
+```
+
+
+
+
+```{r}
+library(lattice)
+state <- data.frame(state.x77, region = state.region)
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(4, 1))
+```
+
+
+#### ggplot2
+
+
+```{r}
+library(ggplot2)
+data(mpg)
+qplot(displ, hwy, data = mpg)
+```
+
+
+
+```{r}
+library(datasets)
+hist(airquality$Ozone) ## Draw a new plot
+```
+
+
+```{r}
+library(datasets)
+with(airquality, plot(Wind, Ozone))
+```
+ 
+```{r}
+library(datasets)
+airquality <- transform(airquality, Month = factor(Month))
+boxplot(Ozone ~ Month, airquality, xlab = "Month", ylab = "Ozone (ppb)")
+
+```
+
+
+**Some Important Base Graphics Parameters**
+
+
+Many base plotting functions share a set of parameters. Here are a few key ones:  
+* pch: the plotting symbol (default is open circle)
+* lty: the line type (default is solid line), can be dashed, dotted, etc.
+* lwd: the line width, specified as an integer multiple
+* col: the plotting color, specified as a number, string, or hex code; the 
+      colors() function gives you a vector of colors by name
+* xlab: character string for the x-axis label
+* ylab: character string for the y-axis label
+\
+\
+
+
+```{r}
+library(datasets)
+with(airquality, plot(Wind, Ozone))
+title(main = "Ozone and Wind in New York City") ## Add a title
+```
+
+
+```{r}
+library(datasets)
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+with(subset(airquality, Month != 5), points(Wind, Ozone, col = "red"))
+legend("topright", pch = 1, col = c("blue", "red"), legend = c("May", "Other Months"))
+
+
+```
+
+
+
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City",
+pch = 20))
+model <- lm(Ozone ~ Wind, airquality)
+abline(model, lwd = 2)
+```
+
+
+```{r}
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+with(airquality, {
+plot(Wind, Ozone, main = "Ozone and Wind")
+plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+plot(Temp, Ozone, main = "Ozone and Temperature")
+mtext("Ozone and Weather in New York City", outer = TRUE)
+})
+```
+
+
+
+```{r}
+library(datasets)
+with(faithful, plot(eruptions, waiting)) ## Make plot appear on screen device
+title(main = "Old Faithful Geyser data")
+```
+
+
+
+```{r}
+pdf(file = "myplot.pdf") ## Open PDF device; create 'myplot.pdf' in my working directory
+## Create plot and send to a file (no plot appears on screen)
+with(faithful, plot(eruptions, waiting))
+title(main = "Old Faithful Geyser data") ## Annotate plot; still nothing on screen
+dev.off() ## Close the PDF file device
+## Now you can view the file 'myplot.pdf' on your computer
+```
+
+
+
+
+### Lesson 3
+
+#### Save Plot into file
+
+```{r}
+library(datasets)
+pdf(file = "myplot.pdf") ## Open PDF device; create 'myplot.pdf' in my working directory
+## Create plot and send to a file (no plot appears on screen)
+with(faithful, plot(eruptions, waiting))
+title(main = "Old Faithful Geyser data") ## Annotate plot; still nothing on screen
+dev.off() ## Close the PDF file device
+## Now you can view the file 'myplot.pdf' on your computer
+
+```
+
+There are two basic types of file devices:  
+vector and bitmap devices
+
+
+**Vector formats:  **
+
+* pdf: useful for line-type graphics, resizes well, usually portable, not efficient if a plot has many objects/points
+* svg: XML-based scalable vector graphics; supports animation and  interactivity, potentially useful for web-based plots
+* win.metafile: Windows metafile format (only on Windows)
+* postscript: older format, also resizes well, usually portable, can be used to create encapsulated postscript files; Windows systems often don’t have a postscript viewer
+
+
+**Bitmap formats  **
+
+*png: bitmapped format, good for line drawings or images with solid colors, uses lossless compression (like the old GIF format), most web browsers can read this format natively, good for plotting many many many points, does not resize well 
+
+* jpeg: good for photographs or natural scenes, uses lossy compression, good for plotting many many many points, does not resize well, can be read by almost any computer and any web browser, not great for line drawings
+
+*tiff: Creates bitmap files in the TIFF format; supports lossless compression 
+
+*bmp: a native Windows bitmapped format
+
+
+
+
+```{r}
+library(datasets)
+with(faithful, plot(eruptions, waiting)) ## Create plot on screen device
+title(main = "Old Faithful Geyser data") ## Add a main title
+dev.copy(png, file = "geyserplot.png") ## Copy my plot to a PNG file
+dev.off() ## Don't forget to close the PNG device!
+```
+
+
+
+
+```{r}
+plot(airquality$Wind, airquality$Ozone, main = "Ozone and Wind")
+may <- subset(airquality, Month==5)
+points(may$Wind,may$Ozone,col="blue",pch=17)
+notmay <- subset(airquality, Month!=5)
+points(notmay$Wind,notmay$Ozone,col="red",pch=8)
+legend("topright",pch=c(17,8),col=c("blue","red"),legend=c("May","Other Months"))
+abline(v=median(airquality$Wind),lty=2,lwd=2)
+```
+
+
+### Course Project of Week 1 
+
+
+
+#### tidy data
+
+#### read Data
+
+```{r}
+
+# Files 
+url       <-"https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip" 
+fileZip  <- "Data.zip"
+fileName <- "household_power_consumption.txt"
+
+
+# Check if the data is downloaded and download when applicable
+# and delete zip file
+if (!file.exists(fileName)) {
+      download.file(url, destfile = fileZip)
+      unzip(fileZip)
+      file.remove(fileZip)
+}
+
+
+# Reading the file
+library(data.table)
+DT <- fread(fileName,
+            sep = ";",
+            header = TRUE,
+            colClasses = rep("character",9))
+
+
+# DT size
+print(object.size(DT), units = "auto") #143.1 Mb
+
+
+# Convert "?" in NAs
+DT[DT == "?"] <- NA
+
+
+
+```
+
+
+
+#### Select specific range to look
+```{r}
+
+# Convert Date and Selecting adequate lines
+DT$Date <- as.Date(DT$Date, format = "%d/%m/%Y")
+DT <- DT[DT$Date >= as.Date("2007-02-01") & DT$Date <= as.Date("2007-02-02"),]
+
+
+
+```
+
+Choose indicate in project
+
+#### Adjust type of data
+```{r}
+
+
+###  Plot 4
+
+# Joining day and time to create a new posix date
+DT$posix <- as.POSIXct(strptime(paste(DT$Date, DT$Time, sep = " "),
+                                format = "%Y-%m-%d %H:%M:%S"))
+
+
+
+# Convert column that we will use to correct class
+DT$Global_active_power <- as.numeric(DT$Global_active_power)
+DT$Sub_metering_1 <- as.numeric(DT$Sub_metering_1)
+DT$Sub_metering_2 <- as.numeric(DT$Sub_metering_2)
+DT$Sub_metering_3 <- as.numeric(DT$Sub_metering_3)
+DT$Voltage <- as.numeric(DT$Voltage)
+DT$Global_reactive_power <- as.numeric(DT$Global_reactive_power)
+DT$Global_intensity <- as.numeric(DT$Global_intensity)
+
+```
+
+
+
+
+#### Curisity exData
+
+#### plot graphs
+
+
+```{r}
+ par(mfrow=c(4,2) ,mar=c(2,4,1,1) )
+ plot(DT$posix,
+     DT$Global_active_power,
+     type = "l",
+     xlab = "" ,
+     ylab = "" ,
+     main = "Global Active Power"
+  )
+
+  plot(DT$posix,
+     DT$Sub_metering_1,
+     type = "l",
+     xlab = "" ,
+     ylab = "" ,
+     main = "Sub_metering_1"
+  )
+  
+  plot(DT$posix,
+     DT$Global_reactive_power,
+     type = "l",
+     ylab = "" ,
+     ylim = c(0.0, 1),
+     main = "Global Reactive Power"
+  )
+ 
+  plot(DT$posix,
+     DT$Sub_metering_2,
+     type = "l",
+     xlab = "" ,
+     ylab = "" ,
+     main = "Sub_metering_2"
+  )
+  
+ plot(DT$posix,
+     DT$Voltage,
+     type = "l",
+     xlab = "" ,
+     ylab = "" ,
+     main = "Voltage"
+  )
+
+   plot(DT$posix,
+     DT$Sub_metering_3,
+     type = "l",
+     xlab = "" ,
+     ylab = "" ,
+     main = "Sub_metering_3"
+  )
+   
+  plot(DT$posix,
+     DT$Global_intensity,
+     type = "l",
+     xlab = "" ,
+     ylab = "" ,
+     main = "Global_intensity"
+  )  
+ 
+```
+
+Apparently, the voltage drops in mean with global intensit and Global Reactive Power induce noise in voltage.
+
+
+# Week2 - ggplot
+
+
+## Basic Components
+
+A data frame 
+* aesthe/c mappings: how data are mapped to color, size  
+* geoms: geometric objects like points, lines, shapes.  
+* facets: for condi:onal plots.  
+* stats: sta:s:cal transforma:ons like binning, quan:les, 
+smoothing.  
+* scales: what scale an aesthe:c map uses (example: male = 
+red, female = blue).  
+* coordinate system
+
+
+
+## como é estruturado
+
+```{r}
+library(ggplot2)
+
+# data frame
+head(mpg)
+#  manufacturer model displ year cyl      trans drv cty hwy fl   class
+#1         audi    a4   1.8 1999   4   auto(l5)   f  18  29  p compact
+#2         audi    a4   1.8 1999   4 manual(m5)   f  21  29  p compact
+#3         audi    a4   2.0 2008   4 manual(m6)   f  20  31  p compact
+
+
+#aesthetics
+g <- ggplot(mpg, aes(displ, hwy))
+
+# auto print without saving
+g + geom_point()
+
+
+# explicitly save and print
+g <- g + geom_point()
+print(g)
+
+
+```
+
+
+```{r}
+library(ggplot2)
+str(mpg)
+```
+
+
+### Quick Plot qplot
+```{r}
+library(ggplot2)
+qplot(displ, hwy, data = mpg)
+```
+### Modifying aesthetics
+```{r}
+library(ggplot2)
+qplot(displ, hwy, data = mpg, color = drv, shape = drv)
+```
+
+
+
+###  Adding a geom
+
+
+
+```{r}
+library(ggplot2)
+qplot(hwy, data = mpg, geom = c("density"), color = drv)
+```
+
+
+
+```{r}
+library(ggplot2)
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth"))
+```
+
+
+
+
+
+
+```{r}
+library(ggplot2)
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth"), method = "lm")
+```
+
+
+
+### Histograms
+
+```{r}
+library(ggplot2)
+qplot(hwy, data = mpg, fill = drv)
+```
+
+
+
+```{r}
+library(ggplot2)
+qplot(hwy, data = mpg, fill = drv, bins= 20)
+```
+
+
+```{r}
+library(ggplot2)
+qplot(hwy, data = mpg, fill = drv, binwidth = 2)
+```
+
+
+
+### Facets
+
+```{r}
+library(ggplot2)
+qplot(displ, hwy, data = mpg, facets = .~drv, geom = c("point","smooth"))
+```
+
+
+```{r}
+library(ggplot2)
+qplot(displ, hwy, data = mpg, facets= drv~. )
+```
+
+
+
+
+```{r}
+library(ggplot2)
+qplot(hwy, data = mpg, facets= drv~., binwidth = 2, fill = drv)
+```
+
+### calc direct in data
+```{r}
+library(ggplot2)
+qplot(displ, sqrt(hwy), data = mpg, fill = drv)
+```
+
+
+## plot with layers
+
+
+### First plot
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point()
+
+```
+
+
+### add smooth
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point() +geom_smooth()
+
+```
+
+
+
+
+### Facets
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point() + facet_grid(. ~ drv) + geom_smooth(method = "lm")
+
+```
+
+
+
+
+
+### Annotation
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point(color = "steelblue", size = 4, alpha = 1/2)
+# "Steelblue" constant values
+```
+
+
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point( aes(color = drv), size = 4, alpha = 1/2)
+# aes(color = drv) data variable
+```
+
+
+### Modifying Labels
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point( aes(color = drv), size = 4, alpha = 1/2) +
+      labs(title = "Title") + 
+      labs( x = expression("displ " * teste[2.5] ), y = "hwy")
+
+```
+
+
+
+
+### Customizing the Smooth + rug
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point( aes(color = drv), size = 3, alpha = 1/2) +
+      geom_smooth(size = 2, linetype = 3, method = "lm", se = FALSE)+
+      geom_rug(sides = "b")
+```
+
+
+
+
+
+# Changing the Theme
+
+
+```{r}
+library(ggplot2)
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point( aes(color = drv), size = 3, alpha = 1/2) +
+     theme_bw(base_family = "")
+```
+
+
+
+### Notes about Axis Limits
+
+```{r}
+library(ggplot2)
+
+testdat <- data.frame(x = 1:100, y = rnorm(100))
+testdat[50,2] <- 100  ## outlier
+
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3,3))
+```
+
+
+continuos
+```{r}
+#g <- qplot(x, y, data = testdat, geom = "line")
+#print(g)
+
+#or
+
+g <- ggplot(testdat, aes(x = x, y = y))
+g + geom_line()
+
+```
+
+
+continuos
+**missing outlier in 50** 
+```{r}
+g <- ggplot(testdat, aes(x = x, y = y))
+g + geom_line() +
+      ylim(-3,3)
+```
+
+continuos
+**to include outlier
+```{r}
+g <- ggplot(testdat, aes(x = x, y = y))
+g + geom_line() +
+      coord_cartesian(ylim = c(-3,3))
+```
+
+
+
+
+
+
+
+### Multiple panels, change font
+
+
+
+```{r}
+library(ggplot2)
+library(datasets)
+data(mpg)
+
+#to know fonts
+windowsFonts()
+
+g <- ggplot(mpg, aes(displ, hwy))
+g + geom_point( aes(color = drv), size = 3, alpha = 1/2) +
+      facet_wrap(vars(manufacturer)) +
+      theme_bw(base_family = "serif")
+
+```
+
+
+
+
+
+
+
+
+
+# week 3 - Clustering
+
+
+### hClust
+
+```{r}
+set.seed(1234)
+par(mar = c(0, 0, 0, 0))
+x <- rnorm(12, mean = rep(1:3, each = 4), sd = 0.2)
+y <- rnorm(12, mean = rep(c(1, 2, 1), each = 4), sd = 0.2)
+
+df <- data.frame(x = x, y=y)
+
+plot(df$x, df$y, col = "blue", pch = 19, cex = 2)  
+   text(x + 0.05, y + 0.05, labels = as.character(1:12))
+```
+
+
+
+continuing
+```{r}
+dist(df)
+```
+
+continuing
+
+```{r}
+distxy <- dist(df)
+hClustering <- hclust(distxy)
+class(hClustering)
+plot(hClustering)
+```
+
+just repeting
+
+```{r}
+
+plot(df$x, df$y, col = "blue", pch = 19, cex = 2)  
+   text(x + 0.05, y + 0.05, labels = as.character(1:12))
+```
+
+
+
+### Heatmap
+
+```{r}
+set.seed(1234)
+x <- rnorm(12, mean = rep(1:3, each = 4), sd = 0.2)
+y <- rnorm(12, mean = rep(c(1, 2, 1), each = 4), sd = 0.2)
+dataFrame <- data.frame(x = x, y = y)
+
+set.seed(143)
+dataMatrix <- as.matrix(dataFrame)[sample(1:12), ]
+heatmap(dataMatrix)
+
+
+```
+
+
+
+
+### k-means
+
+```{r}
+
+set.seed(1234)
+x <- rnorm(12, mean = rep(1:3, each = 4), sd = 0.2)
+y <- rnorm(12, mean = rep(c(1, 2, 1), each = 4), sd = 0.2)
+dataFrame <- data.frame(x  ,  y)
+
+kmeansObj <- kmeans(dataFrame,centers=3)
+names(kmeansObj)
+
+```
+
+
+
+
+continuing
+```{r}
+kmeansObj$cluster
+```
+
+
+
+continuing
+```{r}
+par(mar=rep(0.2,4))
+plot(x,y,col=kmeansObj$cluster,pch=19,cex=2)
+points(kmeansObj$centers,col=1:3,pch=3,cex=3,lwd=3)
+```
+
+
+### Heatmaps order by kmeans
+
+```{r}
+dataMatrix <- as.matrix(dataFrame)[sample(1:12),]
+kmeansObj <- kmeans(dataMatrix,centers=3)
+par(mfrow=c(1,2), mar = c(2, 4, 0.1, 0.1))
+image(t(dataMatrix)[,nrow(dataMatrix):1],yaxt="n")
+image(t(dataMatrix)[,order(kmeansObj$cluster)],yaxt="n")
+```
+
+
+## Dimension Reduction
+
+
+### Matrix data
+
+```{r}
+set.seed(12345)
+par(mar = rep(0.2, 4))
+dataMatrix <- matrix(rnorm(400), nrow = 40)
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+```
+
+
+
+
+### Cluster the data
+
+```{r}
+par(mar = rep(0.2, 4))
+heatmap(dataMatrix)
+```
+
+
+
+
+### Add pattern
+
+```{r}
+set.seed(12345)
+par(mar = rep(0.2, 4))
+dataMatrix <- matrix(rnorm(400), nrow = 40)
+
+set.seed(678910)
+for (i in 1:40) {
+      # flip a coin
+      coinFlip <- rbinom(1, size = 1, prob = 0.5)
+      # if coin is heads add a common pattern to that row
+      if (coinFlip) {
+            dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0, 3), each = 5)
+}#for
+      
+
+par(mar = rep(0.2, 4))
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+      
+}
+```
+
+
+continuing
+
+```{r}
+par(mar = rep(0.2, 4))
+heatmap(dataMatrix)
+```
+
+
+### Patterns in rows and collumns
+
+```{r}
+hh <- hclust(dist(dataMatrix))
+dataMatrixOrdered <- dataMatrix[hh$order, ]
+par(mfrow = c(1, 3))
+image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1])
+plot(rowMeans(dataMatrixOrdered), 40:1, , xlab = "Row Mean", ylab = "Row", pch = 19)
+plot(colMeans(dataMatrixOrdered), xlab = "Column", ylab = "Column Mean", pch = 19)
+```
+
+
+### impute k-value in place of NA missing values
+
+
+```{r}
+# install.packages("BiocManager")
+# library(BiocManager)
+# install("impute")
+library(impute) ## Available from http://bioconductor.org
+dataMatrix2 <- dataMatrixOrdered
+dataMatrix2[sample(1:100,size=40,replace=FALSE)] <- NA
+dataMatrix2 <- impute.knn(dataMatrix2)$data
+svd1 <- svd(scale(dataMatrixOrdered)); svd2 <- svd(scale(dataMatrix2))
+par(mfrow=c(1,2)); plot(svd1$v[,1],pch=19); plot(svd2$v[,1],pch=19)
+```
+
+
+
+
+### Reduce qualit image
+
+```{r}
+# problem with load - I load direct from RStudio
+#load("./data/face.rda") 
+
+svd1 <- svd(scale(faceData))
+## Note that %*% is matrix multiplication
+
+# Here svd1$d[1] is a constant
+approx1 <- svd1$u[, 1] %*% t(svd1$v[, 1]) * svd1$d[1]
+
+# In these examples we need to make the diagonal matrix out of d
+approx5 <- svd1$u[, 1:5] %*% diag(svd1$d[1:5]) %*% t(svd1$v[, 1:5])
+approx10 <- svd1$u[, 1:10] %*% diag(svd1$d[1:10]) %*% t(svd1$v[, 1:10])
+
+#graph
+par(mfrow = c(2, 2))
+image(t(approx1)[, nrow(approx1):1], main = "aprox1")
+image(t(approx5)[, nrow(approx5):1], main = "aprox5")
+image(t(approx10)[, nrow(approx10):1], main = "aprox10")
+image(t(faceData)[, nrow(faceData):1], main = "original") ## Original data
+
+```
+
+
+
+
+
+
+
+# Plotting and Color
+
+
+### ColorRamp
+```{r}
+install.packages("grDevices")
+library(grDevices)
+
+#to show color names
+#color() 
+
+# color of pal[,1] [,2] [,3] corresponds to [Red] [Blue] [Green]
+pal <- colorRamp(c("red", "blue"))
+pal(0)
+pal(1)
+pal(0.5)
+pal(seq(0, 1, len = 10))
+```
+
+
+### colorRampPalette
+
+```{r}
+
+pal <- colorRampPalette(c("red", "yellow"))
+
+ pal(2)
+ 
+ pal(10)
+
+   image(volcano, col = pal(20))
+ 
+```
+
+
+
+###  RColorBrewer Package
+
+
+```{r}
+install.packages("RColorBrewer")
+library(RColorBrewer)
+ 
+cols <- brewer.pal(3, "BuGn")
+
+ pal <- colorRampPalette(cols)
+
+  image(volcano, col = pal(20))
+
+```
+
+
+
+### RColorBrewer and colorRampPalette
+
+```{r}
+ library(RColorBrewer)
+ cols <- brewer.pal(3, "BuGn")
+ cols
+#[1] "#E5F5F9" "#99D8C9" "#2CA25F"
+ pal <- colorRampPalette(cols)
+ image(volcano, col = pal(20))
+```
+
+
+comparing
+
+```{r}
+ library(RColorBrewer)
+ cols <- brewer.pal(3, "BuGn")
+ cols
+#[1] "#E5F5F9" "#99D8C9" "#2CA25F"
+ pal <- colorRampPalette(cols)
+ image(volcano, col = pal(7))
+```
+
+
+
+
+comparing
+
+```{r}
+ library(RColorBrewer)
+ cols <- brewer.pal(7, "BuGn")
+ cols
+#[1] "#E5F5F9" "#99D8C9" "#2CA25F"
+ pal <- colorRampPalette(cols)
+ image(volcano, col = pal(7))
+```
+
+
+### smoothScatter function
+
+```{r}
+x <- rnorm(10000)
+y <- rnorm(10000)
+smoothScatter(x,y)
+```
+
+
+### Scatterplot with Transparency
+
+
+```{r}
+x <- rnorm(1000)
+y <- rnorm(1000)
+par(mfrow = c(1, 2) , mar = c(2, 2, 2, 1), oma = c(0, 0, 2, 0))
+plot(x, y, pch = 19)
+plot(x, y, pch = 19, col = rgb(0,0,0,0.2)) # put 0.2 to alpha
+
+```
+
+
+
+# swirl
+
+```{r}
+# teste min distance
+dist(dataFrame)
+
+
+# look at height
+hc <- hclust(distxy)
+plot(hc)
+abline(h=0.1,col="blue")
+
+
+heatmap(mt)
+ mt
+#                   mpg cyl  disp  hp drat    wt
+# Dodge Challenger 15.5   8 318.0 150 2.76 3.520
+# AMC Javelin      15.2   8 304.0 150 3.15 3.435
+# Camaro Z28       13.3   8 350.0 245 3.73 3.840
+# Pontiac Firebird 19.2   8 400.0 175 3.08 3.845
+# Fiat X1-9        27.3   4  79.0  66 4.08 1.935
+# Porsche 914-2    26.0   4 120.3  91 4.43 2.140
+# Lotus Europa     30.4   4  95.1 113 3.77 1.513
+# Ford Pantera L   15.8   8 351.0 264 4.22 3.170
+# Ferrari Dino     19.7   6 145.0 175 3.62 2.770
+# Maserati Bora    15.0   8 301.0 335 3.54 3.570
+# Volvo 142E       21.4   4 121.0 109 4.11 2.780
+ 
+ 
+ 
+ 
+```
+
+### good heatmap
+```{r}
+data("mtcars")
+mt <- as.matrix(mtcars[,c(1:7)])
+mt
+#                      mpg cyl  disp  hp drat    wt  qsec
+# Mazda RX4           21.0   6 160.0 110 3.90 2.620 16.46
+# Mazda RX4 Wag       21.0   6 160.0 110 3.90 2.875 17.02
+# Datsun 710          22.8   4 108.0  93 3.85 2.320 18.61
+# Hornet 4 Drive      21.4   6 258.0 110 3.08 3.215 19.44
+# Hornet Sportabout   18.7   8 360.0 175 3.15 3.440 17.02
+# Valiant             18.1   6 225.0 105 2.76 3.460 20.22
+# Duster 360          14.3   8 360.0 245 3.21 3.570 15.84
+# Merc 240D           24.4   4 146.7  62 3.69 3.190 20.00
+# Merc 230            22.8   4 140.8  95 3.92 3.150 22.90
+# Merc 280            19.2   6 167.6 123 3.92 3.440 18.30
+# Merc 280C           17.8   6 167.6 123 3.92 3.440 18.90
+# Merc 450SE          16.4   8 275.8 180 3.07 4.070 17.40
+# Merc 450SL          17.3   8 275.8 180 3.07 3.730 17.60
+# Merc 450SLC         15.2   8 275.8 180 3.07 3.780 18.00
+# Cadillac Fleetwood  10.4   8 472.0 205 2.93 5.250 17.98
+# Lincoln Continental 10.4   8 460.0 215 3.00 5.424 17.82
+# Chrysler Imperial   14.7   8 440.0 230 3.23 5.345 17.42
+# Fiat 128            32.4   4  78.7  66 4.08 2.200 19.47
+# Honda Civic         30.4   4  75.7  52 4.93 1.615 18.52
+# Toyota Corolla      33.9   4  71.1  65 4.22 1.835 19.90
+# Toyota Corona       21.5   4 120.1  97 3.70 2.465 20.01
+# Dodge Challenger    15.5   8 318.0 150 2.76 3.520 16.87
+# AMC Javelin         15.2   8 304.0 150 3.15 3.435 17.30
+# Camaro Z28          13.3   8 350.0 245 3.73 3.840 15.41
+# Pontiac Firebird    19.2   8 400.0 175 3.08 3.845 17.05
+# Fiat X1-9           27.3   4  79.0  66 4.08 1.935 18.90
+# Porsche 914-2       26.0   4 120.3  91 4.43 2.140 16.70
+# Lotus Europa        30.4   4  95.1 113 3.77 1.513 16.90
+# Ford Pantera L      15.8   8 351.0 264 4.22 3.170 14.50
+# Ferrari Dino        19.7   6 145.0 175 3.62 2.770 15.50
+# Maserati Bora       15.0   8 301.0 335 3.54 3.570 14.60
+# Volvo 142E          21.4   4 121.0 109 4.11 2.780 18.60
+# Legend
+# [, 1]	mpg	Miles/(US) gallon
+# [, 2]	cyl	Number of cylinders
+# [, 3]	disp	Displacement (cu.in.)
+# [, 4]	hp	Gross horsepower
+# [, 5]	drat	Rear axle ratio
+# [, 6]	wt	Weight (1000 lbs)
+
+heatmap(mt)
+
+
+```
+
+
+
+
+
+# week 4
+
+
+### data samsungData
+
+```{r}
+
+#urlData = "https://github.com/jtleek/dataanalysis/raw/master/week4/001clusteringExample/data/samsungData.rda"
+
+#download.file(url = urlData, 
+#                destfile = "./data/samsungData.rda")
+
+load("data/samsungData.rda")
+str(samsungData[,c(1:12, 563)])
+```
+
+```{r}
+table(samsungData$activity)
+```
+
+
+
+### Plotting average acceleration for first subject
+
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 1, 1))
+samsungData <- transform(samsungData, activity = factor(activity))
+sub1 <- subset(samsungData, subject == 1)
+plot(sub1[, 1], col = sub1$activity, ylab = names(sub1)[1])
+plot(sub1[, 2], col = sub1$activity, ylab = names(sub1)[2])
+legend("bottomright", legend = unique(sub1$activity), col = unique(sub1$activity),
+pch = 1)
+```
+
+
+### Clustering based just on average acceleration
+
+```{r}
+source("myplclust.R")
+distanceMatrix <- dist(samsungData[samsungData$subject==1,1:3])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering,lab.col=sub1$Activity)
+```
+
+
+
+
+
+### Plotting max acceleration for the first subject
+
+```{r}
+par(mfrow = c(1, 2))
+plot(sub1[, 10], pch = 19, col = sub1$activity, ylab = names(sub1)[10])
+plot(sub1[, 11], pch = 19, col = sub1$activity, ylab = names(sub1)[11])
+```
+
+### Clustering based on maximum acceleration
+
+```{r}
+source("myplclust.R")
+distanceMatrix <- dist(sub1[, 10:12])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+```
+
+
+
+### Singular Value Decomposition
+
+```{r}
+svd1 = svd(scale(sub1[, -c(562, 563)]))
+par(mfrow = c(1, 2))
+plot(svd1$u[, 1], col = sub1$activity, pch = 19)
+plot(svd1$u[, 2], col = sub1$activity, pch = 19)
+```
+
+
+### Find maximum contributor
+
+```{r}
+plot(svd1$v[, 2], pch = 19)
+```
+
+
+### New clustering with maximum contributer
+
+```{r}
+maxContrib <- which.max(svd1$v[, 2])
+distanceMatrix <- dist(sub1[, c(10:12, maxContrib)])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+```
+
+
+
+
+# Air Pollution Case Study
+
+## complete script
+```{r}
+
+## setwd("~/CourseraModules/04_ExploratoryAnalysis/CaseStudy/pm25_data")
+
+## Has fine particle pollution in the U.S. decreased from 1999 to
+## 2012?
+
+## Read in data from 1999
+
+pm0 <- read.table("RD_501_88101_1999-0.txt", comment.char = "#", header = FALSE, sep = "|", na.strings = "")
+dim(pm0)
+head(pm0)
+cnames <- readLines("RD_501_88101_1999-0.txt", 1)
+print(cnames)
+cnames <- strsplit(cnames, "|", fixed = TRUE)
+print(cnames)
+names(pm0) <- make.names(cnames[[1]])
+head(pm0)
+x0 <- pm0$Sample.Value
+class(x0)
+str(x0)
+summary(x0)
+mean(is.na(x0))  ## Are missing values important here?
+
+## Read in data from 2012
+
+pm1 <- read.table("RD_501_88101_2012-0.txt", comment.char = "#", header = FALSE, sep = "|", na.strings = "", nrow = 1304290)
+names(pm1) <- make.names(cnames[[1]])
+head(pm1)
+dim(pm1)
+x1 <- pm1$Sample.Value
+class(x1)
+
+## Five number summaries for both periods
+summary(x1)
+summary(x0)
+mean(is.na(x1))  ## Are missing values important here?
+
+## Make a boxplot of both 1999 and 2012
+boxplot(x0, x1)
+boxplot(log(x0), log(x1))
+
+## Check negative values in 'x1'
+summary(x1)
+negative <- x1 < 0
+sum(negative, na.rm = T)
+mean(negative, na.rm = T)
+dates <- pm1$Date
+str(dates)
+dates <- as.Date(as.character(dates), "%Y%m%d")
+str(dates)
+hist(dates, "month")  ## Check what's going on in months 1--6
+
+
+## Plot a subset for one monitor at both times
+
+## Find a monitor for New York State that exists in both datasets
+site0 <- unique(subset(pm0, State.Code == 36, c(County.Code, Site.ID)))
+site1 <- unique(subset(pm1, State.Code == 36, c(County.Code, Site.ID)))
+site0 <- paste(site0[,1], site0[,2], sep = ".")
+site1 <- paste(site1[,1], site1[,2], sep = ".")
+str(site0)
+str(site1)
+both <- intersect(site0, site1)
+print(both)
+
+## Find how many observations available at each monitor
+pm0$county.site <- with(pm0, paste(County.Code, Site.ID, sep = "."))
+pm1$county.site <- with(pm1, paste(County.Code, Site.ID, sep = "."))
+cnt0 <- subset(pm0, State.Code == 36 & county.site %in% both)
+cnt1 <- subset(pm1, State.Code == 36 & county.site %in% both)
+sapply(split(cnt0, cnt0$county.site), nrow)
+sapply(split(cnt1, cnt1$county.site), nrow)
+
+## Choose county 63 and side ID 2008
+pm1sub <- subset(pm1, State.Code == 36 & County.Code == 63 & Site.ID == 2008)
+pm0sub <- subset(pm0, State.Code == 36 & County.Code == 63 & Site.ID == 2008)
+dim(pm1sub)
+dim(pm0sub)
+
+## Plot data for 2012
+dates1 <- pm1sub$Date
+x1sub <- pm1sub$Sample.Value
+plot(dates1, x1sub)
+dates1 <- as.Date(as.character(dates1), "%Y%m%d")
+str(dates1)
+plot(dates1, x1sub)
+
+## Plot data for 1999
+dates0 <- pm0sub$Date
+dates0 <- as.Date(as.character(dates0), "%Y%m%d")
+x0sub <- pm0sub$Sample.Value
+plot(dates0, x0sub)
+
+## Plot data for both years in same panel
+par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+plot(dates0, x0sub, pch = 20)
+abline(h = median(x0sub, na.rm = T))
+plot(dates1, x1sub, pch = 20)  ## Whoa! Different ranges
+abline(h = median(x1sub, na.rm = T))
+
+## Find global range
+rng <- range(x0sub, x1sub, na.rm = T)
+rng
+par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+plot(dates0, x0sub, pch = 20, ylim = rng)
+abline(h = median(x0sub, na.rm = T))
+plot(dates1, x1sub, pch = 20, ylim = rng)
+abline(h = median(x1sub, na.rm = T))
+
+## Show state-wide means and make a plot showing trend
+head(pm0)
+mn0 <- with(pm0, tapply(Sample.Value, State.Code, mean, na.rm = T))
+str(mn0)
+summary(mn0)
+mn1 <- with(pm1, tapply(Sample.Value, State.Code, mean, na.rm = T))
+str(mn1)
+
+## Make separate data frames for states / years
+d0 <- data.frame(state = names(mn0), mean = mn0)
+d1 <- data.frame(state = names(mn1), mean = mn1)
+mrg <- merge(d0, d1, by = "state")
+dim(mrg)
+head(mrg)
+
+## Connect lines
+par(mfrow = c(1, 1))
+with(mrg, plot(rep(1, 52), mrg[, 2], xlim = c(.5, 2.5)))
+with(mrg, points(rep(2, 52), mrg[, 3]))
+segments(rep(1, 52), mrg[, 2], rep(2, 52), mrg[, 3])
+
+
+
+```
+
+
+## following with video
+
+### Read
+
+```{r}
+#getwd()
+#setwd("./data/") need correct
+setwd("D:/Dados_Denis/Academico/Data Science/Projetos/studyDataScienceCoursera/data")
+
+# need extract header apart
+pm0 <- read.table("RD_501_88101_1999-0.txt",
+                  comment.char = "#",
+                  header = F,
+                  sep = "|",
+                  na.strings = "",
+                  )
+
+```
+
+```{r}
+head(pm0)
+```
+
+
+
+```{r}
+setwd("D:/Dados_Denis/Academico/Data Science/Projetos/studyDataScienceCoursera/data")
+cnames <- readLines("RD_501_88101_1999-0.txt",1)
+cnames
+```
+
+```{r}
+cnames <- strsplit(cnames, "|", fixed = T)
+cnames
+```
+
+
+
+
+
+### make.names() - Turn valid column names
+```{r}
+names(pm0) <- make.names(cnames[[1]])
+head(pm0)
+```
+
+
+
+
+### continuous
+
+```{r}
+x0 <- pm0$Sample.Value
+str(x0)
+```
+
+
+```{r}
+summary(x0)
+```
+
+
+**calc % of NA**
+11%
+look the data 
+```{r}
+mean(is.na(x0))
+```
+
+
+### read data of 2012
+the same of 1999
+```{r}
+
+setwd("D:/Dados_Denis/Academico/Data Science/Projetos/studyDataScienceCoursera/data")
+
+# need extract header apart
+pm1 <- read.table("RD_501_88101_2012-0.txt",
+                  comment.char = "#",
+                  header = F,
+                  sep = "|",
+                  na.strings = "",
+                  )
+cnames <- readLines("RD_501_88101_2012-0.txt",1)
+cnames <- strsplit(cnames, "|", fixed = T)
+names(pm1) <- make.names(cnames[[1]])
+head(pm1)
+```
+
+
+
+```{r}
+x1 <- pm1$Sample.Value
+str(x1)
+summary(x1)
+# % of NA is about 5%
+mean(is.na(x1))
+```
+
+
+```{r}
+summary(x0)
+summary(x1)
+```
+
+
+
+
+```{r}
+boxplot(x0, x1)
+```
+
+
+### Fix this boxplot with log
+```{r}
+boxplot(log10(x0), log10(x1))
+```
+
+### look at strange  negative value
+
+
+```{r}
+negative <- x1 < 0
+sum(negative, na.rm = TRUE)
+mean(negative, na.rm= T)
+sum(negative, na.rm= T)
+```
+
+### read and convert dates
+```{r}
+dates <- pm1$Date
+str(dates)
+dates <- as.Date(as.character(dates), "%Y%m%d")
+str(dates)
+```
+
+
+```{r}
+hist(dates, "month")
+```
+
+
+
+```{r}
+hist(dates[negative], "month")
+```
+
+
+
+### look at one monitor location in New York State (state.Code == 36)
+```{r}
+site0 <- unique(subset(pm0, State.Code == 36,
+                       c(County.Code, Site.ID)))
+site1 <- unique(subset(pm1, State.Code == 36,
+                       c(County.Code, Site.ID)))
+
+#join County.Code and Site.Id into one code
+site0 <- paste(site0[,1], site0[,2], sep = ".")
+site1 <- paste(site1[,1], site1[,2], sep = ".")
+str(site0)
+str(site1)
+```
+
+### what intercet in 1999 and 2012 in New York State code 36
+```{r}
+both <- intersect(site0 , site1)
+both
+```
+
+put unique code together and subset only New York state code 36
+```{r}
+pm0$county.site <- with(pm0, paste(County.Code, Site.ID, sep = "."))
+pm1$county.site <- with(pm1, paste(County.Code, Site.ID, sep = "."))
+
+cnt0 <- subset(pm0, State.Code == 36 & county.site %in% both)
+cnt1 <- subset(pm1, State.Code == 36 & county.site %in% both)
+
+head(cnt0)
+```
+
+### count observations per site
+```{r}
+sapply(split(cnt0, cnt0$county.site), nrow)
+sapply(split(cnt1, cnt1$county.site), nrow)
+
+```
+
+```{r}
+pm0sub <- subset(pm0, State.Code == 36 & county.site == 63.2008)
+pm1sub <- subset(pm1, State.Code == 36 & county.site == 63.2008)
+dim(pm0sub)
+dim(pm1sub)
+```
+
+
+```{r}
+dates1 <- pm1sub$Date
+dates1 <- as.Date(as.character(dates1), "%Y%m%d")
+x1sub <- pm1sub$Sample.Value
+plot(dates1, x1sub)
+#  I think that we could plot direct
+     
+```
+
+**a collect start in july**
+```{r}
+dates0 <- pm0sub$Date
+dates0 <- as.Date(as.character(dates0), "%Y%m%d")
+x0sub <- pm0sub$Sample.Value
+plot(dates0, x0sub)
+#  I think that we could plot direct
+     
+```
+
+
+## Find global range
+```{r}
+rng <- range(x0sub, x1sub, na.rm=T)
+par(mfrow = c(1,2), mar = c(4,4,2,1))
+plot(dates0,x0sub, pch =20, ylim = rng)
+abline( h = median(x0sub, na.rm=T))
+plot(dates1,x1sub, pch =20, ylim = rng)
+abline( h = median(x1sub, na.rm=T))
+```
+
+
+
+
+### How states improve through years
+
+look at individual states pollution evolution between 1999 and 2012 and how they change
+
+```{r}
+mean0 <- with(pm0, tapply(Sample.Value, State.Code, mean, na.rm = T))
+str(mean0)
+summary(mean0)
+names(mean0)
+mean1 <- with(pm1, tapply(Sample.Value, State.Code, mean, na.rm = T))
+str(mean1)
+summary(mean1)
+names(mean1)
+```
+
+
+Separete data frames for State /yeas
+```{r}
+d0 <- data.frame(state = names(mean0), mean = mean0)
+d1 <- data.frame(state = names(mean1), mean = mean1)
+mrg <- merge(d0, d1, by = "state")
+dim(mrg)
+head(mrg)
+
+```
+
+Connect Lines
+```{r}
+par(mfrow = c(1,1))
+with(mrg, plot(rep(1999,52), mrg[,2], xlim = c(1997, 2014)))
+with(mrg, points(rep(2012,52), mrg[,3]))
+segments(rep(1999,52), mrg[,2], rep(2012,52), mrg[,3])
+```
+
+

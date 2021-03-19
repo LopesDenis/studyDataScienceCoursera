@@ -1,0 +1,237 @@
+---
+title: "z04 - Exploratory Data Analysis"
+author: "Denis Lopes"
+date: "29/10/2020"
+output: 
+  html_document:
+  toc: true
+---
+
+# ggplot
+
+**IMPORTAT**  
+Consult for good referente of ggplot2
+**ggplot2 chetsheet**
+
+##basic
+load data
+The qplot doesnt work very well in Markdown
+```{r qplot color}
+library(ggplot2)
+data(mpg)
+qplot(displ, hwy, data = mpg, color = drv)
+```
+
+##line smooth
+```{r qplot smooth}
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth"))
+```
+
+
+##histograms
+```{r histograms}
+qplot(hwy, data = mpg, fill = drv)
+```
+
+##Panels - Facets
+```{r facets collumn}
+qplot(displ, hwy, data = mpg, facets = .~drv)
+```
+
+##Panels - Facets
+```{r facets row}
+qplot( hwy, data = mpg, facets = drv~., binwidth = 2)
+```
+
+
+##Density Smooth
+```{r density smooth}
+qplot( hwy, data = mpg, geom = "density" , color = drv)
+```
+
+
+
+##Scatterplots
+
+```{r basic}
+ qplot( displ, hwy, data = mpg)
+```
+
+
+
+
+```{r shape}
+ qplot( displ, hwy, data = mpg, shape = drv)
+```
+
+
+```{r color and shape}
+ qplot( displ, hwy, data = mpg, shape = drv, color = drv)
+```
+
+## boxplot
+
+
+```{r}
+qplot(drv,hwy,data=mpg,geom="boxplot")
+qplot(drv,hwy,data=mpg,geom="boxplot",color = manufacturer)
+```
+
+
+
+
+##with lm (linear regretion)
+```{r with lm }
+ qplot( displ, hwy, data = mpg, shape = drv, color = drv, geom = c("point","smooth"), method = "lm")
+```
+
+```{r with lm +geom_smooth}
+ qplot( displ, hwy, data = mpg, shape = drv, color = drv) + geom_smooth( method = "lm")
+qplot(displ, hwy, data = mpg, color=drv, geom = c("point", "smooth"))
+```
+
+
+
+
+```{r with lm +  plus facet}
+ qplot( displ, hwy, data = mpg, shape = drv, color = drv, facets = .~drv) + geom_smooth( method = "lm")
+```
+
+##ggplo2 basic components 
+
+Basic Components
+* A **data frame**  
+* **aesthetic mappings** mapped to color, size  
+* **geoms** Geometric object like points, lines, shapes  
+* **facets** for conditional plots  
+* **stats** statistical transformations like binning, quantiles, smoothing.  
+* **scales** scale an aesthetic maps uses (e.g. male = red, female = blue)  
+* **coordinate system**  
+
+
+
+
+## layers plot
+
+```{r layers summary}
+head(mpg)
+```
+
+
+
+
+```{r layers summary }
+ g = qplot( displ, hwy, data = mpg, shape = drv, color = drv, facets = .~drv) 
+g + geom_smooth( method = "lm") #auto print plot object without saving
+
+p =g + geom_smooth( method = "lm") 
+print(p)     #Explicitly save and print ggplot object
+
+summary(g)  #summary of plot
+
+```
+## verificar diferença aes hipotese - data de g
+
+
+
+```{r verificar}
+#essa
+g + geom_point(aes(color = drv), size = 4, alpha = 1/2)
+
+#com essa
+g + geom_point(color = drv, size = 4, alpha = 1/2)
+```
+
+
+##teste manipulations
+
+
+```{r}
+g = qplot( displ, hwy, data = mpg) 
+g + geom_point() +
+   geom_smooth() + # method = "lm") #teste 1 
+  facet_grid(.~drv) 
+
+```
+
+
+## data lega
+
+```{r}
+qplot(carat,price,data=diamonds, shape=cut)
+```
+
+
+
+
+
+## annotation - legend, labers, transparent
+
+```{r labels}
+qplot( displ, hwy, data = mpg)  +
+  geom_point(color = "red",size = 2, alpha = 1/2) +
+  labs(title = "MPG data", x = expression("displ " * PM[2.45])) +
+  geom_smooth(method = "lm", size = 1, linetype = 2, se=TRUE) +
+  theme_bw()
+  
+```
+
+
+## remove NA value
+
+```{r}
+qplot( displ, hwy, data = mpg, na.rm = TRUE)
+```
+
+
+## Cutpoints
+
+```{r}
+## Calculate the deciles of the data!
+cutpoints <- quantile(mpg$displ, seq(0, 1, length = 5), na.rm = TRUE)
+
+
+## Cut the data at the deciles and create a new factor variable!
+mpg$displDecile <- cut(mpg$displ, cutpoints)
+levels(mpg$displDecile)
+
+qplot( displ, hwy, data = mpg)+ facet_grid(.~displDecile)  
+
+
+```
+
+
+
+
+
+##Becareful use axis limits , out line 
+
+whem use ylim ... it cut of data out of plot  
+for this case, use coord_cartesian(ylim = c(-3,3))
+
+
+```{r use axis limits}
+testdat <- data.frame(x = 1:100, y = rnorm(100))
+testdat[50,2] <- 100 ## Outlier!
+# plot small
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3,3))
+# overall plot
+g <- ggplot(testdat, aes(x = x, y = y))
+g + geom_line()
+# outlier missing in x=50
+g + geom_line() + ylim(-3, 3) + geom_rect(aes(xmin = 45, xmax = 55, ymin = -2, ymax = 2), fill = NA, colour = "red")
+# outlier include
+g + geom_line() + coord_cartesian(ylim = c(-3, 3))
+```
+
+
+
+
+
+
+
+
+
+
+
+
